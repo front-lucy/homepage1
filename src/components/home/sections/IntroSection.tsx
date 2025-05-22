@@ -189,7 +189,7 @@ export default function IntroSection() {
           <TextLine
             initial={{ x: "-100%", opacity: 0 }}
             animate={{ x: 0, opacity: expandBubble ? 0 : 1 }}
-            transition={{ duration: 0.8 }}
+            transition={{ duration: 0.8, opacity: { duration: 0.5 } }}
           >
             <Bold>세상</Bold>
             <Light>의 모든</Light>
@@ -197,7 +197,11 @@ export default function IntroSection() {
           <TextLine
             initial={{ x: "100%", opacity: 0 }}
             animate={{ x: 0, opacity: expandBubble ? 0 : 1 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
+            transition={{
+              duration: 0.8,
+              delay: 0.2,
+              opacity: { duration: 0.5, delay: 0.2 },
+            }}
           >
             <Bold>재미</Bold>
             <Light>를 담다</Light>
@@ -226,7 +230,7 @@ export default function IntroSection() {
         <MotionSpeechBubble
           style={{
             position: "absolute",
-            left: "50%",
+            left: "38%",
             top: "30%",
             transform: "translate(-50%, -50%)",
             width: "454px",
@@ -241,7 +245,7 @@ export default function IntroSection() {
         <MotionSpeechBubble
           style={{
             position: "absolute",
-            left: "50%",
+            left: "38%",
             top: "30%",
             transform: "translate(-50%, -50%)",
             width: "454px",
