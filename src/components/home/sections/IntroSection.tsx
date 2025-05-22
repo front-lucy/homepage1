@@ -1,5 +1,6 @@
 "use client";
 
+import SpeechBubbleSVG from "@/assets/visua-bubblel.svg";
 import styled from "@emotion/styled";
 import { motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
@@ -66,10 +67,11 @@ const Tag = styled(motion.div)<{ angle: number }>`
   border-radius: 900px;
   white-space: nowrap;
   box-shadow: 0 2px 8px rgba(34, 212, 221, 0.1);
-  transform: ${({ angle }) => `translate(-50%, -50%) rotate(${angle}deg)`};
+  transform: translate(-50%, -50%) rotate(${(props) => props.angle}deg);
+  z-index: 2;
 `;
 
-/* ---------------------------------- Tag Data (ideal angle 기반) ---------------------------------- */
+/* ---------------------------------- Data ---------------------------------- */
 const tags = [
   { label: "WEBTOON", x: -588.18, y: -266.67, angle: -13.45 },
   { label: "COMIC BOOK", x: -649.0, y: -45.76, angle: -1.61 },
@@ -83,15 +85,26 @@ const tags = [
 export default function IntroSection() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const dotsRef = useRef<Dot[]>([]);
-  const [step, setStep] = useState(0);
-  const isFixed = step < 3;
+  const [step, setStep] = useState(1);
+  const isFixed = step < 4;
+  const MotionSpeechBubble = motion(SpeechBubbleSVG);
 
   // 스크롤 입력 시 step 증가
   useEffect(() => {
+    let scrollLock = false;
+
     const handleScroll = (e: WheelEvent) => {
+      if (scrollLock) return;
+      scrollLock = true;
+
       e.preventDefault();
       setStep((prev) => Math.min(prev + 1, 3));
+
+      setTimeout(() => {
+        scrollLock = false;
+      }, 1000); // 🔄 1초 동안 입력 무시
     };
+
     window.addEventListener("wheel", handleScroll, { passive: false });
     return () => window.removeEventListener("wheel", handleScroll);
   }, []);
@@ -104,10 +117,9 @@ export default function IntroSection() {
     if (!ctx) return;
 
     const hexToRGBA = (hex: string, alpha: number): string => {
-      const trimHex = hex.charAt(0) === "#" ? hex.slice(1) : hex;
-      const r = parseInt(trimHex.slice(0, 2), 16);
-      const g = parseInt(trimHex.slice(2, 4), 16);
-      const b = parseInt(trimHex.slice(4, 6), 16);
+      const r = parseInt(hex.slice(1, 3), 16);
+      const g = parseInt(hex.slice(3, 5), 16);
+      const b = parseInt(hex.slice(5, 7), 16);
       return `rgba(${r}, ${g}, ${b}, ${alpha})`;
     };
 
@@ -156,7 +168,7 @@ export default function IntroSection() {
         }
       }
 
-      dotsRef.current.forEach((dot) => updateDot(dot));
+      dotsRef.current.forEach(updateDot);
       dotsRef.current = dotsRef.current.filter((dot) => dot.active);
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -179,43 +191,71 @@ export default function IntroSection() {
   return (
     <Wrapper isFixed={isFixed}>
       <Canvas ref={canvasRef} />
-      <Overlay>
-        {/* 텍스트 */}
-        {step >= 1 && (
-          <>
-            <TextLine
-              initial={{ x: "-100%", opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ duration: 0.8 }}
-            >
-              <Bold>세상</Bold>
-              <Light>의 모든</Light>
-            </TextLine>
-            <TextLine
-              initial={{ x: "100%", opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-            >
-              <Bold>재미</Bold>
-              <Light>를 담다</Light>
-            </TextLine>
-          </>
-        )}
 
-        {/* 태그 */}
-        {step >= 2 &&
-          tags.map((tag) => (
-            <Tag
-              key={tag.label}
-              angle={tag.angle}
-              initial={{ x: 0, y: 0, opacity: 0, scale: 1 }}
-              animate={{ x: tag.x, y: tag.y, opacity: 1, scale: 1 }}
-              transition={{ duration: 0.7, ease: "easeOut" }}
-            >
-              {tag.label}
-            </Tag>
-          ))}
-      </Overlay>
+      {/* 텍스트 + 태그 */}
+      {step >= 1 && (
+        <Overlay>
+          <TextLine
+            initial={{ x: "-100%", opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ duration: 0.8 }}
+          >
+            <Bold>세상</Bold>
+            <Light>의 모든</Light>
+          </TextLine>
+          <TextLine
+            initial={{ x: "100%", opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+          >
+            <Bold>재미</Bold>
+            <Light>를 담다</Light>
+          </TextLine>
+
+          {/* 태그 */}
+          {step >= 2 &&
+            tags.map((tag) => (
+              <Tag
+                key={tag.label}
+                angle={tag.angle}
+                style={{
+                  rotate: `${-tag.angle}deg`,
+                }}
+                initial={{
+                  x: 0,
+                  y: 0,
+                  opacity: 0,
+                  scale: 1,
+                }}
+                animate={{
+                  x: tag.x,
+                  y: tag.y,
+                  opacity: 1,
+                  scale: 1,
+                }}
+                transition={{ duration: 0.7, ease: "easeOut" }}
+              >
+                {tag.label}
+              </Tag>
+            ))}
+        </Overlay>
+      )}
+
+      {/* 말풍선 (step 3에서만 등장) */}
+      {step === 3 && (
+        <MotionSpeechBubble
+          style={{
+            position: "absolute",
+            left: "40%",
+            transform: "translate(-50%, -50%)",
+            width: "454px",
+            zIndex: -1,
+          }}
+          initial={{ top: "100%", scale: 1, opacity: 0 }}
+          animate={{ top: "30%", scale: 1, opacity: 1 }}
+          transition={{ duration: 1, ease: "easeOut" }}
+        />
+      )}
     </Wrapper>
   );
 }
