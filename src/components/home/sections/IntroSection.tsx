@@ -5,7 +5,6 @@ import styled from "@emotion/styled";
 import { motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 
-/* ---------------------------- Styled Components ---------------------------- */
 const Wrapper = styled.div<{ isFixed: boolean }>`
   position: ${({ isFixed }) => (isFixed ? "fixed" : "relative")};
   top: 0;
@@ -71,7 +70,6 @@ const Tag = styled(motion.div)<{ angle: number }>`
   z-index: 2;
 `;
 
-/* ---------------------------------- Data ---------------------------------- */
 const tags = [
   { label: "WEBTOON", x: -588.18, y: -266.67, angle: -13.45 },
   { label: "COMIC BOOK", x: -649.0, y: -45.76, angle: -1.61 },
@@ -81,48 +79,50 @@ const tags = [
   { label: "IP BIZ", x: 416.33, y: 156.13, angle: -9.73 },
 ];
 
-/* ---------------------------------- Component ---------------------------------- */
 export default function IntroSection() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const dotsRef = useRef<Dot[]>([]);
   const [step, setStep] = useState(1);
-  const isFixed = step < 4;
+  const [expandBubble, setExpandBubble] = useState(false);
+  const [bubbleIn, setBubbleIn] = useState(false);
+  const isFixed = step < 5;
   const MotionSpeechBubble = motion(SpeechBubbleSVG);
 
-  // 스크롤 입력 시 step 증가
+  useEffect(() => {
+    if (step === 3) {
+      setBubbleIn(true);
+    }
+    if (step === 4) {
+      setExpandBubble(true);
+    }
+  }, [step]);
+
   useEffect(() => {
     let scrollLock = false;
-
     const handleScroll = (e: WheelEvent) => {
       if (scrollLock) return;
       scrollLock = true;
-
       e.preventDefault();
-      setStep((prev) => Math.min(prev + 1, 3));
-
+      setStep((prev) => Math.min(prev + 1, 4));
       setTimeout(() => {
         scrollLock = false;
-      }, 1000); // 🔄 1초 동안 입력 무시
+      }, 1000);
     };
-
     window.addEventListener("wheel", handleScroll, { passive: false });
     return () => window.removeEventListener("wheel", handleScroll);
   }, []);
 
-  // 점 애니메이션
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-
-    const hexToRGBA = (hex: string, alpha: number): string => {
+    const hexToRGBA = (hex: string, alpha: number) => {
       const r = parseInt(hex.slice(1, 3), 16);
       const g = parseInt(hex.slice(3, 5), 16);
       const b = parseInt(hex.slice(5, 7), 16);
       return `rgba(${r}, ${g}, ${b}, ${alpha})`;
     };
-
     const createDot = (): Dot => ({
       active: true,
       diameter: Math.random() * 4,
@@ -136,7 +136,6 @@ export default function IntroSection() {
       hex: "#22D4DD",
       color: hexToRGBA("#22D4DD", 0.05),
     });
-
     const updateDot = (dot: Dot) => {
       if (dot.alpha < 0.4) {
         dot.alpha += 0.005;
@@ -153,35 +152,29 @@ export default function IntroSection() {
         dot.active = false;
       }
     };
-
     const drawDot = (dot: Dot) => {
       ctx.fillStyle = dot.color;
       ctx.beginPath();
       ctx.arc(dot.x, dot.y, dot.diameter, 0, Math.PI * 2);
       ctx.fill();
     };
-
     const animate = () => {
       if (dotsRef.current.length < 30) {
         for (let i = dotsRef.current.length; i < 30; i++) {
           dotsRef.current.push(createDot());
         }
       }
-
       dotsRef.current.forEach(updateDot);
       dotsRef.current = dotsRef.current.filter((dot) => dot.active);
-
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       dotsRef.current.forEach(drawDot);
       requestAnimationFrame(animate);
     };
-
     const resize = () => {
       dotsRef.current = [];
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
     };
-
     resize();
     animate();
     window.addEventListener("resize", resize);
@@ -191,13 +184,11 @@ export default function IntroSection() {
   return (
     <Wrapper isFixed={isFixed}>
       <Canvas ref={canvasRef} />
-
-      {/* 텍스트 + 태그 */}
       {step >= 1 && (
         <Overlay>
           <TextLine
             initial={{ x: "-100%", opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
+            animate={{ x: 0, opacity: expandBubble ? 0 : 1 }}
             transition={{ duration: 0.8 }}
           >
             <Bold>세상</Bold>
@@ -205,32 +196,23 @@ export default function IntroSection() {
           </TextLine>
           <TextLine
             initial={{ x: "100%", opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
+            animate={{ x: 0, opacity: expandBubble ? 0 : 1 }}
             transition={{ duration: 0.8, delay: 0.2 }}
           >
             <Bold>재미</Bold>
             <Light>를 담다</Light>
           </TextLine>
-
-          {/* 태그 */}
           {step >= 2 &&
             tags.map((tag) => (
               <Tag
                 key={tag.label}
                 angle={tag.angle}
-                style={{
-                  rotate: `${-tag.angle}deg`,
-                }}
-                initial={{
-                  x: 0,
-                  y: 0,
-                  opacity: 0,
-                  scale: 1,
-                }}
+                style={{ rotate: `${-tag.angle}deg` }}
+                initial={{ x: 0, y: 0, opacity: 0, scale: 1 }}
                 animate={{
                   x: tag.x,
                   y: tag.y,
-                  opacity: 1,
+                  opacity: expandBubble ? 0 : 1,
                   scale: 1,
                 }}
                 transition={{ duration: 0.7, ease: "easeOut" }}
@@ -240,13 +222,12 @@ export default function IntroSection() {
             ))}
         </Overlay>
       )}
-
-      {/* 말풍선 (step 3에서만 등장) */}
-      {step === 3 && (
+      {step === 3 && bubbleIn && (
         <MotionSpeechBubble
           style={{
             position: "absolute",
-            left: "40%",
+            left: "50%",
+            top: "30%",
             transform: "translate(-50%, -50%)",
             width: "454px",
             zIndex: -1,
@@ -256,11 +237,25 @@ export default function IntroSection() {
           transition={{ duration: 1, ease: "easeOut" }}
         />
       )}
+      {step === 4 && expandBubble && (
+        <MotionSpeechBubble
+          style={{
+            position: "absolute",
+            left: "50%",
+            top: "30%",
+            transform: "translate(-50%, -50%)",
+            width: "454px",
+            zIndex: -1,
+          }}
+          initial={{ scale: 1 }}
+          animate={{ scale: 10 }}
+          transition={{ duration: 1.2, ease: "easeOut" }}
+        />
+      )}
     </Wrapper>
   );
 }
 
-/* Dot 타입 정의 */
 interface Dot {
   active: boolean;
   diameter: number;
