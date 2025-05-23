@@ -220,7 +220,7 @@ export default function IntroSection() {
                   opacity: expandBubble ? 0 : 1,
                   scale: 1,
                 }}
-                transition={{ duration: 0.7, ease: "easeOut" }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
               >
                 {tag.label}
               </Tag>
