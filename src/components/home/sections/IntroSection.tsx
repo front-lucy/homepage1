@@ -1,5 +1,6 @@
 "use client";
 
+import JaedamLogoENG from "@/assets/Logo-Jaedam-Eng.png";
 import SpeechBubbleSVG from "@/assets/visua-bubblel.svg";
 import styled from "@emotion/styled";
 import { motion } from "framer-motion";
@@ -87,6 +88,7 @@ export default function IntroSection() {
   const [bubbleIn, setBubbleIn] = useState(false);
   const isFixed = step < 5;
   const MotionSpeechBubble = motion(SpeechBubbleSVG);
+  const MotionLogo = motion.img;
 
   useEffect(() => {
     if (step === 3) {
@@ -103,7 +105,7 @@ export default function IntroSection() {
       if (scrollLock) return;
       scrollLock = true;
       e.preventDefault();
-      setStep((prev) => Math.min(prev + 1, 4));
+      setStep((prev) => Math.min(prev + 1, 5));
       setTimeout(() => {
         scrollLock = false;
       }, 1000);
@@ -230,7 +232,7 @@ export default function IntroSection() {
         <MotionSpeechBubble
           style={{
             position: "absolute",
-            left: "38%",
+            left: "36%",
             top: "30%",
             transform: "translate(-50%, -50%)",
             width: "454px",
@@ -242,19 +244,37 @@ export default function IntroSection() {
         />
       )}
       {step === 4 && expandBubble && (
-        <MotionSpeechBubble
-          style={{
-            position: "absolute",
-            left: "38%",
-            top: "30%",
-            transform: "translate(-50%, -50%)",
-            width: "454px",
-            zIndex: -1,
-          }}
-          initial={{ scale: 1 }}
-          animate={{ scale: 10 }}
-          transition={{ duration: 1.2, ease: "easeOut" }}
-        />
+        <>
+          <MotionSpeechBubble
+            style={{
+              position: "absolute",
+              left: "36%",
+              top: "30%",
+              transform: "translate(-50%, -50%)",
+              width: "454px",
+              zIndex: -1,
+            }}
+            initial={{ scale: 1 }}
+            animate={{ scale: 10 }}
+            transition={{ duration: 1.2, ease: "easeOut" }}
+          />
+          <MotionLogo
+            src={JaedamLogoENG.src}
+            alt="Jaedam Logo"
+            style={{
+              position: "absolute",
+              top: "40%",
+              left: "30%",
+              transform: "translate(-50%, -50%)",
+              width: "667px",
+              height: "auto",
+              zIndex: 0,
+            }}
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.3, duration: 1, ease: "easeOut" }}
+          />
+        </>
       )}
     </Wrapper>
   );
